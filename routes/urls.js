@@ -27,27 +27,26 @@ router.post("/:id", (req, res) => {
         errors.error = "Enter the url in correct format, Eg: https://www.example.com or http://www.example.com";
     }
 
-    //If the user has already shortened the url
-    Url.findOne({
-        original_url : url
-    })
-    .then(url => {
-        if(url){
-            errors.error = "You have shortened this url already";
-            errors.url = url.shortened_url;
-            res.status(400);
-            res.send(errors);
-            return;
-        }
-    })
-
     if(Object.keys(errors).length !== 0){
         res.status(400);
         res.send(errors);
         return;
     }
 
-    //Find the user exists
+    //If the user has already shortened the url
+    Url.findOne({
+        original_url : url,
+        user_id : req.params.id
+    })
+    .then(urlFound => {
+        if(urlFound){    //If the user already has the url shortened then return the shortened link and and error msg
+            errors.error = "You have shortened this url already";
+            errors.url = urlFound.shortened_url;
+            res.status(400);
+            res.send(errors);
+            return;
+        }else{  //Else create a new shortened url and store it in db
+            //Find the user exists
     User.findOne({
         _id : req.params.id
     })
@@ -63,6 +62,7 @@ router.post("/:id", (req, res) => {
          .then(url => {
             //Update the shortened_url reference in users document 
             user.shortened_urls.push(url._id)
+            user.links_shortened += 1
             user.save()
                 .then(user => {
                     res.status(200);
@@ -71,12 +71,22 @@ router.post("/:id", (req, res) => {
                 })
                 .catch(err => console.log("url id not updated in the user document"))
          })
-         .catch(err => console.log("url not created"))
+         .catch(err => {
+             //Mostly occurs due to duplicate keygeneration
+             console.log("url not created")
+             res.status(400)
+             res.send({"error" : "url not shortened, please try again"})
+         })
      })
      .catch(err => {
          res.status(404);
          res.send({"user":"user not found"})
      })
+        }
+    })
+
+    console.log(url)
+    
 });
 
 router.delete("/:id", (req, res) => {
@@ -109,6 +119,7 @@ router.delete("/:id", (req, res) => {
             if(user.shortened_urls.includes(urlId)){
                 url.remove()
                 user.shortened_urls = user.shortened_urls.filter(url => url === urlId)
+                user.links_shortened -= 1
                 //console.log(user.shortened_urls)
                 user.save()
                     .then(user => {

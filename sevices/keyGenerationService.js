@@ -6,7 +6,7 @@ function generateKey(username, url){
     const stringCombination = url+username;
     const bytes = utf8.encode(stringCombination)
     const encoded = base64.encode(bytes)
-    console.log(encoded)
+    //console.log(encoded)
     const startPos = Math.random() * (encoded.length - 6);
     return encoded.slice(startPos, startPos + 5);
 }

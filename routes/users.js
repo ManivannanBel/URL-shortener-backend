@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 const express = require("express");
 const router = express.Router();
 
@@ -30,13 +31,21 @@ router.post("/register", (req, res) => {
       password,
       email
     };
-    new User(newUser)
-      .save()
-      .then(user => {
-        res.send("CREATED");
-      })
-      .catch(err => console.log(err));
 
+    bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(newUser.password, salt, (err, hash) => {
+            if(err) throw err;
+            
+            newUser.password = hash;
+
+            new User(newUser)
+            .save()
+            .then(user => {
+              res.send("CREATED");
+            })
+            .catch(err => console.log(err));      
+        })
+    })
 });
 
 module.exports = router;

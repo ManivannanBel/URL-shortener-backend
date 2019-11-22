@@ -11,6 +11,9 @@ const User = mongoose.model("users");
 //Load Url model
 require("../models/Url");
 const Url = mongoose.model("urls");
+//Load Key model
+require("../models/Key");
+const Key = mongoose.model("keys");
 
 router.post("/:id", (req, res) => {
 
@@ -51,32 +54,40 @@ router.post("/:id", (req, res) => {
         _id : req.params.id
     })
      .then(user => {
-        const newUrl = {
-            original_url : url,
-            shortened_url : keyGeneration(req.params.id, url),
-            user_id : user._id
-        }
-        //If the user exists, then create a new url
-        new Url(newUrl)
-         .save()
-         .then(url => {
-            //Update the shortened_url reference in users document 
-            user.shortened_urls.push(url._id)
-            user.links_shortened += 1
-            user.save()
-                .then(user => {
-                    res.status(200);
-                    res.send({"url" : url.shortened_url});
-                    return;
-                })
-                .catch(err => console.log("url id not updated in the user document"))
-         })
-         .catch(err => {
-             //Mostly occurs due to duplicate keygeneration
-             console.log("url not created")
-             res.status(400)
-             res.send({"error" : "url not shortened, please try again"})
-         })
+
+        keyGeneration(req.params.id, url)
+        .then(key => {
+            const newUrl = {
+                original_url : url,
+                shortened_url : key,
+                user_id : user._id
+            }
+            
+            console.log("new " + newUrl.shortened_url);
+            //If the user exists, then create a new url
+            new Url(newUrl)
+             .save()
+             .then(url => {
+                //Update the shortened_url reference in users document 
+                user.shortened_urls.push(url._id)
+                user.links_shortened += 1
+                user.save()
+                    .then(user => {
+                        res.status(200);
+                        res.send({"url" : url.shortened_url});
+                        return;
+                    })
+                    .catch(err => console.log("url id not updated in the user document"))
+             })
+             .catch(err => {
+                 //Mostly occurs due to duplicate keygeneration
+                 console.log("url not created")
+                 res.status(400)
+                 res.send({"error" : "url not shortened, please try again"})
+             })
+        })
+
+
      })
      .catch(err => {
          res.status(404);
@@ -117,15 +128,19 @@ router.delete("/:id", (req, res) => {
          })
          .then(user => {
             if(user.shortened_urls.includes(urlId)){
+                const shortened_key = url.shortened_url;
                 url.remove()
                 user.shortened_urls = user.shortened_urls.filter(url => url === urlId)
                 user.links_shortened -= 1
                 //console.log(user.shortened_urls)
                 user.save()
                     .then(user => {
+                        Key.findOneAndUpdate({key : shortened_key}, {available : true}).exec();
                         res.send("Url deleted");
                     })
                     .catch(err => console.log("Url deleted from URL model but not in user list"))
+            }else{
+                console.log("urlid and user's doesn't match")
             }
          })
      })

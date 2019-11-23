@@ -28,6 +28,10 @@ const UrlSchema = new Schema({
     no_of_redirections : {
         type : Number,
         default : 0
+    },
+    is_api : {
+        type : Boolean,
+        default : false
     }
 });
 

@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 
 //Load User model
-require("../models/User");
+require("../../models/User");
 const User = mongoose.model("users");
 
 router.post("/register", (req, res) => {

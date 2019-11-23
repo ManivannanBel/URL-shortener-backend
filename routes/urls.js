@@ -127,11 +127,13 @@ router.delete("/:id", (req, res) => {
             _id : id
          })
          .then(user => {
+            
             if(user.shortened_urls.includes(urlId)){
                 const shortened_key = url.shortened_url;
                 url.remove()
-                user.shortened_urls = user.shortened_urls.filter(url => url === urlId)
-                user.links_shortened -= 1
+                //console.log(user.shortened_urls[0])
+                user.shortened_urls = user.shortened_urls.filter(a =>{ return (!a.equals(urlId))})
+                //user.links_shortened -= 1
                 //console.log(user.shortened_urls)
                 user.save()
                     .then(user => {

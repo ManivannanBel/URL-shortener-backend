@@ -33,11 +33,11 @@ router.post("/register", (req, res) => {
     if(!password){
         errors.password = "password should not be empty";
     }else{
-        if(newPassword !== confirmPassword){
+        if(password !== confirmPassword){
             errors.password = "Password mismatch";
         }else if(password.length < 8){
             errors.password = "Password should be of length atleast 8 characters";
-        }
+        }   
     }
 
     if(!email)
@@ -84,17 +84,12 @@ router.get("/:id", async (req, res) => {
     //console.log(urls)
         result.username = user.username,
         result.email = user.email,
-        result.no_of_links_shortened = user.links_shortened
-        result.no_of_active_urls = user.shortened_urls.length
-        result.urls = []
+        result.noOfLinksShortened = user.links_shortened
+        result.noOfActiveLinks = user.shortened_urls.length
+        result.noOfLinksCreatedWithAPI = urls.length
+        result.totalNumberOfRedirections = 0
         for(url of urls){
-            const urlData = {
-                original_url : url.original_url,
-                shortened_url : url.shortened_url,
-                no_of_redirections : url.no_of_redirections,
-                is_api : url.is_api
-            }
-            result.urls.push(urlData)
+            result.totalNumberOfRedirections += url.no_of_redirections
         }
         //console.log(result)
         res.send(result);
@@ -109,13 +104,13 @@ router.get("/:id", async (req, res) => {
 router.put("/changeUsername/:id", async (req, res) => {
     const {id} = req.params;
     const {newUsername} = req.body;
-
+    console.log(req.body);
     const errors = {}
 
-    if(!username){
+    if(!newUsername){
         errors.username = "username should not be empty";
     }else{
-        if(username.length < 5)
+        if(newUsername.length < 5)
             errors.username = "username should of lenght atleast 5 characters";     
     }
 

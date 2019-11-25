@@ -1,8 +1,12 @@
 const express = require("express");
+const subdomain = require('express-subdomain');
+const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 
 const app = express();
+
+app.use(cors())
 
 //Connect to mongoose
 mongoose.connect('mongodb://localhost/shortener-db', {

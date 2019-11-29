@@ -51,10 +51,11 @@ router.post("/:id", (req, res) => {
       }).then(urlFound => {
         if (urlFound) {
           //If the user already has the url shortened then return the shortened link and and error msg
-          errors.error = "You have shortened this url already";
-          errors.url = urlFound.shortened_url;
-          res.status(400);
-          res.send(errors);
+          const message = {}
+            message.message = "You have shortened this url already";
+            message.url = urlFound.shortened_url;
+            //res.status(400);
+            res.send(message);
           return;
         } else {
           //Else create a new shortened url and store it in db
@@ -83,7 +84,7 @@ router.post("/:id", (req, res) => {
                       .save()
                       .then(user => {
                         res.status(200);
-                        res.send({ url: url.shortened_url });
+                        res.send({ url : url.shortened_url});
                         return;
                       })
                       .catch(err =>

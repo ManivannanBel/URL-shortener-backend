@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const passport = require("passport");
 const express = require("express");
 const router = express.Router();
 
@@ -11,11 +13,37 @@ require("../../models/Url");
 const Url = mongoose.model("urls");
 
 router.post("/login/", (req, res) => {
-    const {username, password} = req.body;
-    if(!username)
-        errors.username = "username should not be empty";   
+    const {email, password} = req.body;
+    if(!email)
+        errors.email = "username should not be empty";   
     if(!password)
         errors.password = "password should not be empty";
+
+    User.findOne({email : email})
+        .then(user => {
+            if(!user){
+                return res.status(404).json({error : "User not found"});
+            }
+            
+            bcrypt.compare(password, user.password)
+                .then(isMatch => {
+                    if(isMatch){
+
+                        const payload = {id : user._id, username : user.username}
+
+                        //sign token
+                        jwt.sign(payload, "secret", {expiresIn : 3600}, (err, token) => {
+                            res.json({
+                                success : true,
+                                token : 'Bearer ' + token
+                            })
+                        })
+                    }else{
+                        res.status(404).json({"error":"pass no match"});
+                    }
+                })
+        })
+    
 })
 
 router.post("/register", (req, res) => {
@@ -72,9 +100,9 @@ router.post("/register", (req, res) => {
     })
 });
 
-
-router.get("/:id", async (req, res) => {
-    const {id} = req.params;
+//get user details
+router.get("/", passport.authenticate("jwt", {session : false}) , async (req, res) => {
+    const id = req.user._id;
 
     try{
     const result = {}
@@ -86,7 +114,8 @@ router.get("/:id", async (req, res) => {
         result.email = user.email,
         result.noOfLinksShortened = user.links_shortened
         result.noOfActiveLinks = user.shortened_urls.length
-        result.noOfLinksCreatedWithAPI = urls.length
+        result.noOfLinksCreatedWithAPI = (urls.filter(url => url.is_api)).length
+        result.hasApi = user.has_api
         result.totalNumberOfRedirections = 0
         for(url of urls){
             result.totalNumberOfRedirections += url.no_of_redirections
@@ -95,23 +124,23 @@ router.get("/:id", async (req, res) => {
         res.send(result);
    }catch(err){
     res.status(404)
-    res.send({"error":"user not found"})
+    res.send({error :"user not found"})
     return;    
    }
 
 })
 
-router.put("/changeUsername/:id", async (req, res) => {
-    const {id} = req.params;
+router.put("/changeUsername/", async (req, res) => {
+    const id = req.user._id;
     const {newUsername} = req.body;
-    console.log(req.body);
+   // console.log(req.body);
     const errors = {}
 
     if(!newUsername){
-        errors.username = "username should not be empty";
+        errors.error = "username should not be empty";
     }else{
         if(newUsername.length < 5)
-            errors.username = "username should of lenght atleast 5 characters";     
+            errors.error = "username should of lenght atleast 5 characters";     
     }
 
     if(Object.keys(errors).length !== 0){
@@ -129,18 +158,18 @@ router.put("/changeUsername/:id", async (req, res) => {
     }
 })
 
-router.put("/changePassword/:id", async (req, res) => {
-    const {id} = req.params;
+router.put("/changePassword/", async (req, res) => {
+    const id = req.user._id;
     const {newPassword, confirmPassword} = req.body;
     const errors = {}
 
-    if(!password){
-        errors.password = "password should not be empty";
+    if(!newPassword){
+        errors.error = "password should not be empty";
     }else{
         if(newPassword !== confirmPassword){
-            errors.password = "Password mismatch";
-        }else if(password.length < 8){
-            errors.password = "Password should be of length atleast 8 characters";
+            errors.error = "Password mismatch";
+        }else if(newPassword.length < 8){
+            errors.error = "Password should be of length atleast 8 characters";
         }
     }
 
@@ -156,7 +185,7 @@ router.put("/changePassword/:id", async (req, res) => {
             
             User.findOneAndUpdate({_id : id}, {password : hash})
                 .then(user => {
-                    res.send({"message" : "password updated successfully"})
+                    res.send({"success" : "password updated successfully"})
                 })
                 .catch(err => {
                     res.status(400)
@@ -167,8 +196,8 @@ router.put("/changePassword/:id", async (req, res) => {
 
 })
 
-router.put("/changeEmail/:id", async (req, res) => {
-    const {id} = req.params;
+router.put("/changeEmail/", async (req, res) => {
+    const id = req.user._id;
     const {newEmail} = req.body;
 
     if(!newEmail){
@@ -184,6 +213,27 @@ router.put("/changeEmail/:id", async (req, res) => {
         res.status(400)
         res.send({error : "error occured in updating email!"});
     }
+})
+
+router.put("/enableAPIService/", (req, res) => {
+
+    const id = req.user._id;
+
+    User.findOne({
+        _id : id
+    }).then(user => {
+        user.has_api = true
+        user.save()
+            .then(user => {
+                res.send("API service has been enabledby the user")
+            })
+            .catch(err => {
+                res.send({error : "error in updating, please try again"})
+            })
+    }).catch(err => {
+        res.send({error : "error in reading db, please try again"})
+    })
+
 })
 
 module.exports = router;

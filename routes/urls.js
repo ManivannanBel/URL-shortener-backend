@@ -15,8 +15,9 @@ const Url = mongoose.model("urls");
 require("../models/Key");
 const Key = mongoose.model("keys");
 
-router.post("/:id", (req, res) => {
+router.post("/", (req, res) => {
 
+    const id = req.user._id;
     const {url} = req.body;
     const errors = {}
 
@@ -24,7 +25,7 @@ router.post("/:id", (req, res) => {
         errors.error = "Url should not be empty";
     }
 
-    //console.log(checkIfUrlExists(url))
+    console.log(url)
 
     if(!validateUrl(url)){
         errors.error = "Enter the url in correct format, Eg: https://www.example.com or http://www.example.com";
@@ -39,23 +40,25 @@ router.post("/:id", (req, res) => {
     //If the user has already shortened the url
     Url.findOne({
         original_url : url,
-        user_id : req.params.id
+        user_id : id
     })
     .then(urlFound => {
         if(urlFound){    //If the user already has the url shortened then return the shortened link and and error msg
-            errors.error = "You have shortened this url already";
-            errors.url = urlFound.shortened_url;
-            res.status(400);
-            res.send(errors);
+            const message = {}
+            message.updateList = false;
+            message.success = "You have shortened this url already";
+            message.url = urlFound;
+            //res.status(400);
+            res.send(message);
             return;
         }else{  //Else create a new shortened url and store it in db
             //Find the user exists
     User.findOne({
-        _id : req.params.id
+        _id : id
     })
      .then(user => {
 
-        keyGeneration(req.params.id, url)
+        keyGeneration(id, url)
         .then(key => {
             const newUrl = {
                 original_url : url,
@@ -63,7 +66,8 @@ router.post("/:id", (req, res) => {
                 user_id : user._id
             }
             
-            console.log("new " + newUrl.shortened_url);
+            //console.log("new " + newUrl.shortened_url);
+
             //If the user exists, then create a new url
             new Url(newUrl)
              .save()
@@ -74,7 +78,8 @@ router.post("/:id", (req, res) => {
                 user.save()
                     .then(user => {
                         res.status(200);
-                        res.send({"url" : url.shortened_url});
+                        url.user_id = ""
+                        res.send({updateList : true, url : url, success : "Url shortened successfully"});
                         return;
                     })
                     .catch(err => console.log("url id not updated in the user document"))
@@ -100,14 +105,14 @@ router.post("/:id", (req, res) => {
     
 });
 
-router.delete("/:id", (req, res) => {
-    const {id} = req.params;
+router.delete("/", (req, res) => {
+    const id = req.user._id;
     const {url} = req.body;
-
+    console.log(req.body);
     const errors = {}
 
     if(!url){
-        errors.url = "Url should not be empty";
+        errors.error = "Url should not be empty";
     }
 
     if(Object.keys(errors).length !== 0){
@@ -138,7 +143,7 @@ router.delete("/:id", (req, res) => {
                 user.save()
                     .then(user => {
                         Key.findOneAndUpdate({key : shortened_key}, {available : true}).exec();
-                        res.send("Url deleted");
+                        res.send({ url : shortened_key ,success : "Url deleted successfully"});
                     })
                     .catch(err => console.log("Url deleted from URL model but not in user list"))
             }else{
@@ -148,8 +153,25 @@ router.delete("/:id", (req, res) => {
      })
      .catch(err => {
          res.status(404)
-         res.send({"url" : "url not found"})
+         res.send({"error" : "url not found"})
      })
+})
+
+router.post("/urls/:id", (req, res) => {
+    const id = req.user._id;
+
+    Url.find({
+        user_id : id
+    })
+    .select("-user_id")
+    .then(urls => {
+        res.send(urls);
+    }).catch(err => {
+        res.status(400)
+        res.send({error : "Error in fetching urls"});
+    })
+
+
 })
 
 function validateUrl(url){    

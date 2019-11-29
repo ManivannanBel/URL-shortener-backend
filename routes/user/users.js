@@ -14,10 +14,20 @@ const Url = mongoose.model("urls");
 
 router.post("/login/", (req, res) => {
     const {email, password} = req.body;
+    //console.log(req.body)
+
+    const errors = {}
     if(!email)
         errors.email = "username should not be empty";   
     if(!password)
         errors.password = "password should not be empty";
+
+        if(Object.keys(errors).length !== 0){
+            res.status(400)
+            res.send(errors)
+            return;
+        }
+    
 
     User.findOne({email : email})
         .then(user => {
@@ -130,7 +140,7 @@ router.get("/", passport.authenticate("jwt", {session : false}) , async (req, re
 
 })
 
-router.put("/changeUsername/", async (req, res) => {
+router.put("/changeUsername/", passport.authenticate("jwt", {session : false}) , async (req, res) => {
     const id = req.user._id;
     const {newUsername} = req.body;
    // console.log(req.body);
@@ -158,7 +168,7 @@ router.put("/changeUsername/", async (req, res) => {
     }
 })
 
-router.put("/changePassword/", async (req, res) => {
+router.put("/changePassword/", passport.authenticate("jwt", {session : false}) , async (req, res) => {
     const id = req.user._id;
     const {newPassword, confirmPassword} = req.body;
     const errors = {}
@@ -196,7 +206,7 @@ router.put("/changePassword/", async (req, res) => {
 
 })
 
-router.put("/changeEmail/", async (req, res) => {
+router.put("/changeEmail/", passport.authenticate("jwt", {session : false}) , async (req, res) => {
     const id = req.user._id;
     const {newEmail} = req.body;
 
@@ -215,7 +225,7 @@ router.put("/changeEmail/", async (req, res) => {
     }
 })
 
-router.put("/enableAPIService/", (req, res) => {
+router.put("/enableAPIService/", passport.authenticate("jwt", {session : false}) , (req, res) => {
 
     const id = req.user._id;
 

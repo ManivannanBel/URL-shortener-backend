@@ -2,6 +2,7 @@ const keyGeneration = require("../sevices/keyGenerationService")
 const isUrlValid = require("url-validation");
 const urlExists = require("url-exists");
 const mongoose = require("mongoose");
+const passport = require("passport")
 const express = require("express");
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const Url = mongoose.model("urls");
 require("../models/Key");
 const Key = mongoose.model("keys");
 
-router.post("/", (req, res) => {
+router.post("/",  passport.authenticate("jwt", {session : false}), (req, res) => {
 
     const id = req.user._id;
     const {url} = req.body;
@@ -105,7 +106,7 @@ router.post("/", (req, res) => {
     
 });
 
-router.delete("/", (req, res) => {
+router.delete("/", passport.authenticate("jwt", {session : false}), (req, res) => {
     const id = req.user._id;
     const {url} = req.body;
     console.log(req.body);
@@ -157,7 +158,7 @@ router.delete("/", (req, res) => {
      })
 })
 
-router.post("/urls/:id", (req, res) => {
+router.post("/urls/", passport.authenticate("jwt", {session : false}), (req, res) => {
     const id = req.user._id;
 
     Url.find({

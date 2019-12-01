@@ -22,7 +22,6 @@ const UrlSchema = new Schema({
     },
     user_id : {
         type : Schema.Types.ObjectId,
-        required : true,
         ref : "users"
     },
     no_of_redirections : {

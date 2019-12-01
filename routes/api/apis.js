@@ -64,12 +64,14 @@ router.post("/:id", (req, res) => {
             _id: req.params.id
           })
           .then(user => {
+            const currentDate = new Date();
               keyGeneration(req.params.id, url).then(key => {
                 const newUrl = {
                   original_url: url,
                   shortened_url: key,
                   user_id: user._id,
-                  is_api : true
+                  is_api : true,
+                  expiration_time : new Date().setFullYear(currentDate.getFullYear() + 1)
                 };
 
                 console.log("new " + newUrl.shortened_url);

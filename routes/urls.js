@@ -58,13 +58,15 @@ router.post("/",  passport.authenticate("jwt", {session : false}), (req, res) =>
         _id : id
     })
      .then(user => {
-
+        const currentDate = new Date();
         keyGeneration(id, url)
         .then(key => {
             const newUrl = {
                 original_url : url,
                 shortened_url : key,
-                user_id : user._id
+                user_id : user._id,
+                creation_time : currentDate,
+                expiration_time : new Date().setFullYear(currentDate.getFullYear() + 1)
             }
             
             //console.log("new " + newUrl.shortened_url);
@@ -174,6 +176,55 @@ router.post("/urls/", passport.authenticate("jwt", {session : false}), (req, res
 
 
 })
+
+router.post("/anonymousShorten/", (req, res) => {
+
+    //const id = req.user._id;
+    const {url} = req.body;
+    const errors = {}
+    console.log(url)
+    if(!url){
+        errors.error = "Url should not be empty";
+    }
+
+    console.log(url)
+
+    if(!validateUrl(url)){
+        errors.error = "Enter the url in correct format, Eg: https://www.example.com or http://www.example.com";
+    }
+
+    if(Object.keys(errors).length !== 0){
+        res.status(400);
+        res.send(errors);
+        return;
+    }
+
+    const currentDate = new Date();
+    keyGeneration("", url)
+    .then(key => {
+        const newUrl = {
+            original_url : url,
+            shortened_url : key,
+            //user_id : user._id,
+            creation_time : currentDate,
+            expiration_time : new Date().setMonth(currentDate.getMonth() + 1)
+        }
+        
+        //If the user exists, then create a new url
+        new Url(newUrl)
+         .save()
+         .then(url => {
+            //Update the shortened_url reference in users document 
+            res.send({url : url, success : "Url shortened successfully"});
+         })
+         .catch(err => {
+             //Mostly occurs due to duplicate keygeneration
+             console.log("url not created")
+             res.status(400)
+             res.send({"error" : "url not shortened, please try again"})
+         })
+        })    
+});
 
 function validateUrl(url){    
     return isUrlValid(url);

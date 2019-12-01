@@ -42,7 +42,7 @@ router.post("/login/", (req, res) => {
                         const payload = {id : user._id, username : user.username}
 
                         //sign token
-                        jwt.sign(payload, "secret", {expiresIn : 60}, (err, token) => {
+                        jwt.sign(payload, "secret", {expiresIn : 3600}, (err, token) => {
                             res.json({
                                 success : true,
                                 token : 'Bearer ' + token
@@ -103,7 +103,7 @@ router.post("/register", (req, res) => {
             new User(newUser)
             .save()
             .then(user => {
-              res.send("CREATED");
+              res.send({success : "Account created successfully"});
             })
             .catch(err => console.log(err));      
         })
@@ -127,6 +127,7 @@ router.get("/", passport.authenticate("jwt", {session : false}) , async (req, re
         result.noOfLinksCreatedWithAPI = (urls.filter(url => url.is_api)).length
         result.hasApi = user.has_api
         result.totalNumberOfRedirections = 0
+        result.apiKey = user._id
         for(url of urls){
             result.totalNumberOfRedirections += url.no_of_redirections
         }
@@ -235,7 +236,7 @@ router.put("/enableAPIService/", passport.authenticate("jwt", {session : false})
         user.has_api = true
         user.save()
             .then(user => {
-                res.send("API service has been enabledby the user")
+                res.send({ success :"API service has been enabled by the user"})
             })
             .catch(err => {
                 res.send({error : "error in updating, please try again"})

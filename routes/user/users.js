@@ -32,7 +32,7 @@ router.post("/login/", (req, res) => {
     User.findOne({email : email})
         .then(user => {
             if(!user){
-                return res.status(404).json({error : "User not found"});
+                return res.status(404).json({error : "Email or password incorrect"});
             }
             
             bcrypt.compare(password, user.password)
@@ -42,14 +42,14 @@ router.post("/login/", (req, res) => {
                         const payload = {id : user._id, username : user.username}
 
                         //sign token
-                        jwt.sign(payload, "secret", {expiresIn : 3600}, (err, token) => {
+                        jwt.sign(payload, "secret", {expiresIn : 60}, (err, token) => {
                             res.json({
                                 success : true,
                                 token : 'Bearer ' + token
                             })
                         })
                     }else{
-                        res.status(404).json({"error":"pass no match"});
+                        res.status(404).json({error : "Email or password incorrect"});
                     }
                 })
         })

@@ -109,6 +109,8 @@ app.get("/:key", (req, res) => {
     });
 });
 
-const server = app.listen(5000, function() {
+const PORT = process.env.PORT || 5000;
+
+const server = app.listen(PORT, function() {
   console.log("Server listening to port 5000");
 });

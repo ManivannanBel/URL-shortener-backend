@@ -12,6 +12,7 @@ const User = mongoose.model("users");
 require("../../models/Url");
 const Url = mongoose.model("urls");
 
+const keys = require("../../config/keys")
 router.post("/login/", (req, res) => {
     const {email, password} = req.body;
     //console.log(req.body)
@@ -42,7 +43,7 @@ router.post("/login/", (req, res) => {
                         const payload = {id : user._id, username : user.username}
 
                         //sign token
-                        jwt.sign(payload, "secret", {expiresIn : 3600}, (err, token) => {
+                        jwt.sign(payload, keys.secretOrKey, {expiresIn : 3600}, (err, token) => {
                             res.json({
                                 success : true,
                                 token : 'Bearer ' + token

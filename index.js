@@ -9,9 +9,11 @@ const app = express();
 
 app.use(cors());
 
+
 //Connect to mongoose
+const keys = require("./config/keys");
 mongoose
-  .connect("mongodb://localhost/shortener-db", {
+  .connect(keys.mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })

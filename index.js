@@ -51,7 +51,7 @@ const Key = mongoose.model("keys");
 
 app.get("/:key", (req, res) => {
   const { key } = req.params;
-  console.log(key);
+  //console.log(key);
   Url.findOne({ shortened_url: key })
     .then(url => {
       //console.log(url.creation_time + " < " + url.expiration_time +" = "+ (url.creation_time < url.expiration_time))

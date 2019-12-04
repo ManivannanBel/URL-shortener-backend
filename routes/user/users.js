@@ -41,7 +41,7 @@ router.post("/login/", (req, res) => {
                     if(isMatch){
 
                         const payload = {id : user._id, username : user.username}
-
+                        //console.log(keys.secretOrKey)
                         //sign token
                         jwt.sign(payload, keys.secretOrKey, {expiresIn : 3600}, (err, token) => {
                             res.json({

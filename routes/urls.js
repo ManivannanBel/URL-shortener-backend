@@ -26,7 +26,7 @@ router.post("/",  passport.authenticate("jwt", {session : false}), (req, res) =>
         errors.error = "Url should not be empty";
     }
 
-    console.log(url)
+    //console.log(url)
 
     if(!validateUrl(url)){
         errors.error = "Enter the url in correct format, Eg: https://www.example.com or http://www.example.com";
@@ -56,7 +56,7 @@ router.post("/",  passport.authenticate("jwt", {session : false}), (req, res) =>
             //Find the user exists
     User.findOne({
         _id : id
-    })
+    })  
      .then(user => {
         const currentDate = new Date();
         keyGeneration(id, url)
@@ -99,19 +99,19 @@ router.post("/",  passport.authenticate("jwt", {session : false}), (req, res) =>
      })
      .catch(err => {
          res.status(404);
-         res.send({"user":"user not found"})
+         res.send({"error":"user not found"})
      })
         }
     })
 
-    console.log(url)
+   // console.log(url)
     
 });
 
 router.delete("/", passport.authenticate("jwt", {session : false}), (req, res) => {
     const id = req.user._id;
     const {url} = req.body;
-    console.log(req.body);
+   // console.log(req.body);
     const errors = {}
 
     if(!url){
@@ -160,7 +160,7 @@ router.delete("/", passport.authenticate("jwt", {session : false}), (req, res) =
      })
 })
 
-router.post("/urls/", passport.authenticate("jwt", {session : false}), (req, res) => {
+router.get("/urls/", passport.authenticate("jwt", {session : false}), (req, res) => {
     const id = req.user._id;
 
     Url.find({
@@ -171,7 +171,7 @@ router.post("/urls/", passport.authenticate("jwt", {session : false}), (req, res
         res.send(urls);
     }).catch(err => {
         res.status(400)
-        res.send({error : "Error in fetching urls"});
+        res.send({"error" : "Error in fetching urls"});
     })
 
 
@@ -182,12 +182,12 @@ router.post("/anonymousShorten/", (req, res) => {
     //const id = req.user._id;
     const {url} = req.body;
     const errors = {}
-    console.log(url)
+    //console.log(url)
     if(!url){
         errors.error = "Url should not be empty";
     }
 
-    console.log(url)
+    //console.log(url)
 
     if(!validateUrl(url)){
         errors.error = "Enter the url in correct format, Eg: https://www.example.com or http://www.example.com";

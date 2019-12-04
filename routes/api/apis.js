@@ -74,7 +74,7 @@ router.post("/:id", (req, res) => {
                   expiration_time : new Date().setFullYear(currentDate.getFullYear() + 1)
                 };
 
-                console.log("new " + newUrl.shortened_url);
+                //console.log("new " + newUrl.shortened_url);
                 //If the user exists, then create a new url
                 new Url(newUrl)
                   .save()
@@ -113,7 +113,7 @@ router.post("/:id", (req, res) => {
     }
   });
 
-  console.log(url);
+ // console.log(url);
 });
 
 router.delete("/:id", (req, res) => {

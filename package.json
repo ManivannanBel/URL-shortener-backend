@@ -24,7 +24,7 @@
     "url-exists": "^1.0.3",
     "url-validation": "^2.1.0",
     "utf8": "^3.0.0",
-    "validator": "^12.1.0"
+    "validator": "^13.7.0"
   },
   "engines": {
     "node": "10.x"
